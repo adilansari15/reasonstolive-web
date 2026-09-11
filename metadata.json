@@ -1,0 +1,6 @@
+{
+  "name": "ReasonsToLive",
+  "description": "A safe space where people anonymously share hope, struggles, and reasons to keep moving forward.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
