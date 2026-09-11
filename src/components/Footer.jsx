@@ -14,9 +14,7 @@ export function Footer() {
             <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
               A quiet, anonymous sanctuary for anyone walking through heavy days. Read honest words of survival and remember that you are not alone in the quiet. 
             </p>
-            <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
-              Important Notice: The stories and messages shared on this platform are personal experiences and peer support only. They are not medical, psychological, or crisis-intervention services and should not be considered professional advice. If you are in immediate danger or experiencing a mental health crisis, contact local emergency services or a qualified mental health professional immediately.
-            </p>
+            
             <div className="flex items-center gap-1.5 text-[11px] text-stone-400 dark:text-stone-500 pt-1">
               <ShieldCheck className="w-3.5 h-3.5 shrink-0 text-stone-500" />
               <span>100% Anonymous &middot; No accounts &middot; No tracking</span>
