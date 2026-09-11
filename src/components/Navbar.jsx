@@ -30,7 +30,7 @@ export function Navbar() {
               In deep pain or need someone to talk to right now?
             </span>
           </div>
-          <div className="flex items-center gap-2.5 shrink-0 text-xs">
+          {/* <div className="flex items-center gap-2.5 shrink-0 text-xs">
             <a
               href="tel:14416"
               className="font-semibold text-amber-200 hover:text-white underline decoration-amber-300/50 transition-colors"
@@ -51,7 +51,7 @@ export function Navbar() {
             >
               All Helplines
             </Link>
-          </div>
+          </div> */}
         </div>
       </div>
 
