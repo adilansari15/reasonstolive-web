@@ -149,7 +149,7 @@ export const SELF_CARE_PRACTICES = [
 export function formatTimeAgo(dateString) {
   try {
     const date = new Date(dateString);
-    const now = new Date();
+    const now = new Date();  //huguyguy
     const diffInSeconds = Math.floor((now.getTime() - date.getTime()) / 1000);
 
     if (diffInSeconds < 60) return "Just now";
