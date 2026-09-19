@@ -1,6 +1,6 @@
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
-import { moderateContent } from "./moderationService.js";
+// Moderation disabled – auto-approve posts (moderation import removed)
 
 /**
  * Query approved posts with filtering, search, pagination, and sorting
@@ -11,9 +11,7 @@ export async function getPosts(params = {}) {
   // Base filter: only public approved posts
   const baseFilter = {
     isApproved: true,
-    moderationStatus: "approved",
   };
-
   if (category && category !== "All") {
     baseFilter.category = { $regex: new RegExp(`^${category}$`, "i") };
   }
@@ -89,14 +87,14 @@ export async function getPosts(params = {}) {
  */
 export async function getPostById(id) {
   if (!mongoose.Types.ObjectId.isValid(id)) return null;
-  return Post.findOne({ _id: id, isApproved: true, moderationStatus: "approved" }).lean();
+  return Post.findOne({ _id: id, isApproved: true }).lean();
 }
 
 /**
  * Get a random approved post
  */
 export async function getRandomPost() {
-  const filter = { isApproved: true, moderationStatus: "approved" };
+  const filter = { isApproved: true };
   const count = await Post.countDocuments(filter);
   if (count === 0) return null;
 
@@ -108,19 +106,18 @@ export async function getRandomPost() {
  * Create a new post with automated Gemini AI moderation
  */
 export async function createPost({ content, category, mood }) {
-  // Moderate content with Gemini
-  const moderation = await moderateContent(content, category, mood);
-
+  // Moderation disabled – automatically approve posts
   const post = await Post.create({
     content: content.trim(),
     category: category.trim(),
     mood: mood.trim(),
     helpfulCount: 0,
     heartCount: 0,
-    status: moderation.isApproved ? "approved" : "pending",
-    moderationStatus: moderation.moderationStatus,
-    moderationReason: moderation.moderationReason,
-    isApproved: moderation.isApproved,
+    status: "approved",
+    // moderation fields retained for backward compatibility but set to approved
+    moderationStatus: "approved",
+    moderationReason: "",
+    isApproved: true,
   });
 
   return post;

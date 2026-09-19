@@ -95,7 +95,7 @@ async function startServer() {
   app.listen(PORT, "0.0.0.0", () => {
     console.log(`\n🚀 ReasonsToLive server listening on http://localhost:${PORT}`);
     console.log(`🛡️  Security: Helmet, Rate Limiting & Mongo Sanitize active`);
-    console.log(`🤖 AI Moderation: Gemini 3.8 Flash active\n`);
+
   });
 }
 

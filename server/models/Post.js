@@ -30,19 +30,7 @@ const PostSchema = new mongoose.Schema(
       type: String,
       default: "approved",
     },
-    moderationStatus: {
-      type: String,
-      enum: ["approved", "pending", "rejected", "flagged"],
-      default: "pending",
-    },
-    moderationReason: {
-      type: String,
-      default: "",
-    },
-    isApproved: {
-      type: Boolean,
-      default: false,
-    },
+
   },
   {
     timestamps: true,
