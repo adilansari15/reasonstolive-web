@@ -171,3 +171,59 @@ export async function flagPost(req, res, next) {
     next(err);
   }
 }
+
+/**
+ * DELETE /api/admin/posts/:id
+ * Permanently delete a post
+ */
+export async function deletePost(req, res, next) {
+  try {
+    const { id } = req.params;
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+
+    const post = await Post.findByIdAndDelete(id);
+
+    if (!post) {
+      return res.status(404).json({ success: false, error: "Post not found" });
+    }
+
+    res.json({ success: true, message: "Post deleted successfully" });
+  } catch (err) {
+    next(err);
+  }
+}
+
+/**
+ * GET /api/admin/posts/all
+ * Get all posts for admin view (paginated)
+ */
+export async function getAllPosts(req, res, next) {
+  try {
+    const { page = 1, limit = 20, search = "" } = req.query;
+    const pageNum = Math.max(1, parseInt(page, 10) || 1);
+    const limitNum = Math.min(100, Math.max(1, parseInt(limit, 10) || 20));
+    const skip = (pageNum - 1) * limitNum;
+
+    const filter = search.trim()
+      ? { content: { $regex: new RegExp(search.trim(), "i") } }
+      : {};
+
+    const [posts, total] = await Promise.all([
+      Post.find(filter).sort({ createdAt: -1 }).skip(skip).limit(limitNum).lean(),
+      Post.countDocuments(filter),
+    ]);
+
+    res.json({
+      success: true,
+      posts,
+      total,
+      page: pageNum,
+      limit: limitNum,
+      totalPages: Math.ceil(total / limitNum) || 1,
+    });
+  } catch (err) {
+    next(err);
+  }
+}

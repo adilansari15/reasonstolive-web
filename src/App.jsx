@@ -8,6 +8,7 @@ import { WallPage } from "./pages/WallPage.jsx";
 import { SharePage } from "./pages/SharePage.jsx";
 import { ReasonsPage } from "./pages/ReasonsPage.jsx";
 import { SupportPage } from "./pages/SupportPage.jsx";
+import { AdminPage } from "./pages/AdminPage.jsx";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -33,6 +34,7 @@ export default function App() {
               <Route path="/share" element={<SharePage />} />
               <Route path="/reasons" element={<ReasonsPage />} />
               <Route path="/support" element={<SupportPage />} />
+              <Route path="/admin" element={<AdminPage />} />
               <Route path="*" element={<HomePage />} />
             </Routes>
           </main>

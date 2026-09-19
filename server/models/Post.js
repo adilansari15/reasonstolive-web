@@ -41,9 +41,6 @@ const PostSchema = new mongoose.Schema(
 PostSchema.index({ createdAt: -1 });
 PostSchema.index({ category: 1 });
 PostSchema.index({ mood: 1 });
-PostSchema.index({ moderationStatus: 1 });
-PostSchema.index({ isApproved: 1 });
-PostSchema.index({ isApproved: 1, createdAt: -1 });
 
 // Full-text search index on content and category
 PostSchema.index({ content: "text", category: "text" });

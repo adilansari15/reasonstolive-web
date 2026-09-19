@@ -6,6 +6,7 @@ import { createServer as createViteServer } from "vite";
 
 import { connectDB } from "./server/config/mongodb.js";
 import { seedDatabase } from "./server/seed.js";
+import { initAdminPassword } from "./server/services/adminAuthService.js";
 import { configureSecurity } from "./server/middleware/security.js";
 import { globalRateLimiter } from "./server/middleware/rateLimiter.js";
 import { errorHandler } from "./server/middleware/errorHandler.js";
@@ -31,6 +32,13 @@ async function startServer() {
     await seedDatabase();
   } catch (seedErr) {
     console.warn("⚠️  Initial seeding check warning:", seedErr.message);
+  }
+
+  // 2b. Ensure admin password is initialized in DB
+  try {
+    await initAdminPassword();
+  } catch (err) {
+    console.warn("⚠️  Admin password init warning:", err.message);
   }
 
   // 3. Security Hardening (Helmet, Mongo Sanitize)

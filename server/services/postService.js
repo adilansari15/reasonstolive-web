@@ -1,17 +1,14 @@
 import mongoose from "mongoose";
 import Post from "../models/Post.js";
-// Moderation disabled – auto-approve posts (moderation import removed)
 
 /**
- * Query approved posts with filtering, search, pagination, and sorting
+ * Query posts with filtering, search, pagination, and sorting
  */
 export async function getPosts(params = {}) {
   const { category, mood, search, sort, page, limit } = params;
 
-  // Base filter: only public approved posts
-  const baseFilter = {
-    isApproved: true,
-  };
+  const baseFilter = {};
+
   if (category && category !== "All") {
     baseFilter.category = { $regex: new RegExp(`^${category}$`, "i") };
   }
@@ -59,7 +56,7 @@ export async function getPosts(params = {}) {
 
   let { posts, total } = await executeQuery(filter);
 
-  // If text index search returned 0 results for a search query, fall back to case-insensitive substring regex
+  // If text index search returned 0 results, fall back to case-insensitive substring regex
   if (total === 0 && search && search.trim()) {
     const regex = new RegExp(search.trim(), "i");
     const fallbackFilter = {
@@ -83,30 +80,27 @@ export async function getPosts(params = {}) {
 }
 
 /**
- * Get a single approved post by ID
+ * Get a single post by ID
  */
 export async function getPostById(id) {
   if (!mongoose.Types.ObjectId.isValid(id)) return null;
-  return Post.findOne({ _id: id, isApproved: true }).lean();
+  return Post.findById(id).lean();
 }
 
 /**
- * Get a random approved post
+ * Get a random post
  */
 export async function getRandomPost() {
-  const filter = { isApproved: true };
-  const count = await Post.countDocuments(filter);
+  const count = await Post.countDocuments({});
   if (count === 0) return null;
-
   const random = Math.floor(Math.random() * count);
-  return Post.findOne(filter).skip(random).lean();
+  return Post.findOne({}).skip(random).lean();
 }
 
 /**
- * Create a new post with automated Gemini AI moderation
+ * Create a new post — instantly approved, no moderation
  */
 export async function createPost({ content, category, mood }) {
-  // Moderation disabled – automatically approve posts
   const post = await Post.create({
     content: content.trim(),
     category: category.trim(),
@@ -114,10 +108,6 @@ export async function createPost({ content, category, mood }) {
     helpfulCount: 0,
     heartCount: 0,
     status: "approved",
-    // moderation fields retained for backward compatibility but set to approved
-    moderationStatus: "approved",
-    moderationReason: "",
-    isApproved: true,
   });
 
   return post;
@@ -130,8 +120,8 @@ export async function reactToPost(id, type) {
   if (!mongoose.Types.ObjectId.isValid(id)) return null;
 
   const updateField = type === "helpful" ? { helpfulCount: 1 } : { heartCount: 1 };
-  return Post.findOneAndUpdate(
-    { _id: id, isApproved: true },
+  return Post.findByIdAndUpdate(
+    id,
     { $inc: updateField },
     { new: true }
   ).lean();

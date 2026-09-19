@@ -62,10 +62,9 @@ export async function likeReason(id) {
  */
 export async function getCommunityStats() {
   const [totalPosts, totalReasons, postsAgg, reasonsAgg] = await Promise.all([
-    Post.countDocuments({ isApproved: true }),
+    Post.countDocuments(),
     Reason.countDocuments(),
     Post.aggregate([
-      { $match: { isApproved: true } },
       {
         $group: {
           _id: null,

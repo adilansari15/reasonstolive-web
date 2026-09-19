@@ -59,13 +59,9 @@ export async function getMonitorStats() {
       ? "connecting"
       : "disconnected";
 
-  const [totalPosts, approvedPosts, pendingPosts, rejectedPosts, flaggedPosts, totalReasons] =
+  const [totalPosts, totalReasons] =
     await Promise.all([
       Post.countDocuments(),
-      Post.countDocuments({ isApproved: true }),
-      Post.countDocuments({ moderationStatus: "pending" }),
-      Post.countDocuments({ moderationStatus: "rejected" }),
-      Post.countDocuments({ moderationStatus: "flagged" }),
       Reason.countDocuments(),
     ]);
 
@@ -78,10 +74,6 @@ export async function getMonitorStats() {
     nodeVersion: process.version,
     counts: {
       totalPosts,
-      approvedPosts,
-      pendingPosts,
-      rejectedPosts,
-      flaggedPosts,
       totalReasons,
     },
     timestamp: new Date().toISOString(),

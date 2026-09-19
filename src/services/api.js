@@ -90,4 +90,57 @@ export const api = {
     if (!res.ok) throw new Error("Failed to fetch stats");
     return res.json();
   },
+
+  // ── Admin auth ──────────────────────────────────────────────────────────────
+
+  async adminLogin(password) {
+    const res = await fetch("/api/admin/auth/login", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ password }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Login failed");
+    return data; // { success, token }
+  },
+
+  async adminChangePassword(currentPassword, newPassword) {
+    const token = sessionStorage.getItem("adminToken") || "";
+    const res = await fetch("/api/admin/auth/change-password", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+        Authorization: `Bearer ${token}`,
+      },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to change password");
+    return data;
+  },
+
+  async adminGetAllPosts(params = {}) {
+    const token = sessionStorage.getItem("adminToken") || "";
+    const query = new URLSearchParams();
+    if (params.page) query.set("page", params.page.toString());
+    if (params.limit) query.set("limit", params.limit.toString());
+    if (params.search) query.set("search", params.search);
+    const res = await fetch(`/api/admin/posts/all?${query.toString()}`, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to fetch posts");
+    return data;
+  },
+
+  async adminDeletePost(id) {
+    const token = sessionStorage.getItem("adminToken") || "";
+    const res = await fetch(`/api/admin/posts/${id}`, {
+      method: "DELETE",
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    const data = await res.json().catch(() => ({}));
+    if (!res.ok) throw new Error(data.error || "Failed to delete post");
+    return data;
+  },
 };

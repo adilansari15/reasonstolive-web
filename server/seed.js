@@ -7,32 +7,11 @@ import { INITIAL_POSTS, INITIAL_REASONS } from "./seeds.js";
 
 dotenv.config();
 
-/**
- * Ensures existing posts have required moderation fields
- */
-export async function migrateExistingPosts() {
-  const result = await Post.updateMany(
-    { $or: [{ isApproved: { $exists: false } }, { moderationStatus: { $exists: false } }] },
-    {
-      $set: {
-        isApproved: true,
-        moderationStatus: "approved",
-        moderationReason: "Legacy post migration",
-        status: "approved",
-      },
-    }
-  );
-  if (result.modifiedCount > 0) {
-    console.log(`🔄 Migrated ${result.modifiedCount} legacy posts to approved status.`);
-  }
-}
-
 export async function seedDatabase(force = false) {
   const postCount = await Post.countDocuments();
   const reasonCount = await Reason.countDocuments();
 
   if (!force && (postCount > 0 || reasonCount > 0)) {
-    await migrateExistingPosts();
     console.log(`ℹ️  Database already contains ${postCount} posts and ${reasonCount} reasons. Skipping seed.`);
     return;
   }
@@ -47,9 +26,6 @@ export async function seedDatabase(force = false) {
   const postsToInsert = INITIAL_POSTS.map(({ _id, ...rest }) => ({
     ...rest,
     status: "approved",
-    moderationStatus: "approved",
-    moderationReason: "Seed dataset verified",
-    isApproved: true,
   }));
 
   const reasonsToInsert = INITIAL_REASONS.map(({ _id, ...rest }) => rest);
