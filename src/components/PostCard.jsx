@@ -36,7 +36,7 @@ export function PostCard({ post }) {
 
   const handleShare = (e) => {
     e.preventDefault();
-    const textToCopy = `"${post.content}" — via Reasons to Stay`;
+    const textToCopy = `"${post.content}" — via Reasons to Live`;
     if (navigator.clipboard) {
       navigator.clipboard.writeText(textToCopy);
       setCopied(true);

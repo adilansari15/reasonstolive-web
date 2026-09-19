@@ -9,7 +9,7 @@ export function Navbar() {
 
   const navLinks = [
     { name: "Letters", href: "/wall", icon: BookOpen },
-    { name: "Reasons to Stay", href: "/reasons", icon: Compass },
+    { name: "Reasons to Live", href: "/reasons", icon: Compass },
     { name: "Write a Letter", href: "/share", icon: PenLine },
     { name: "Crisis & Support", href: "/support", icon: LifeBuoy },
   ];
@@ -68,7 +68,7 @@ export function Navbar() {
             </div>
             <div className="flex flex-col">
               <span className="font-serif font-semibold text-lg sm:text-xl tracking-tight text-stone-900 dark:text-stone-100">
-                Reasons to Stay
+                Reasons to Live
               </span>
               <span className="text-[10px] tracking-wider uppercase text-stone-500 dark:text-stone-400 -mt-0.5">
                 Anonymous Letters of Hope

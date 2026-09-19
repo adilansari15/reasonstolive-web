@@ -9,7 +9,7 @@ export function Footer() {
           {/* Brand Col */}
           <div className="space-y-3">
             <span className="font-serif text-lg text-stone-900 dark:text-stone-100">
-              Reasons to Stay
+              Reasons to Live
             </span>
             <p className="text-xs text-stone-500 dark:text-stone-400 leading-relaxed">
               A quiet, anonymous sanctuary for anyone walking through heavy days. Read honest words of survival and remember that you are not alone in the quiet. 
@@ -39,7 +39,7 @@ export function Footer() {
               </li>
               <li>
                 <Link to="/reasons" className="text-stone-600 dark:text-stone-400 hover:text-stone-900 dark:hover:text-stone-100 transition-colors">
-                  Little Reasons to Stay
+                  Little Reasons to Live
                 </Link>
               </li>
               <li>
@@ -97,10 +97,10 @@ export function Footer() {
         {/* Medical & Crisis Disclaimer */}
         <div className="pt-6 border-t border-stone-200/80 dark:border-stone-800 text-[11px] leading-relaxed text-stone-400 dark:text-stone-500 space-y-2">
           <p>
-            <strong>Safety Note:</strong> Reasons to Stay is a peer-supported space for emotional solidarity and mutual comfort. It is not a clinical medical service or crisis intervention team. If you are in immediate danger, please reach out to emergency services (dial 112 in India) or call Tele-MANAS at 14416.
+            <strong>Safety Note:</strong> Reasons to Live is a peer-supported space for emotional solidarity and mutual comfort. It is not a clinical medical service or crisis intervention team. If you are in immediate danger, please reach out to emergency services (dial 112 in India) or call Tele-MANAS at 14416.
           </p>
           <p>
-            &copy; {new Date().getFullYear()} Reasons to Stay. You are worthy of being here tomorrow.
+            &copy; {new Date().getFullYear()} Reasons to Live. You are worthy of being here tomorrow.
           </p>
         </div>
       </div>
