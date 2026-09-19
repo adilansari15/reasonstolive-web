@@ -1,182 +1,80 @@
 import express from "express";
 import path from "path";
+import dotenv from "dotenv";
+import morgan from "morgan";
 import { createServer as createViteServer } from "vite";
-import { db } from "./server/db.js";
+
+import { connectDB } from "./server/config/mongodb.js";
+import { seedDatabase } from "./server/seed.js";
+import { configureSecurity } from "./server/middleware/security.js";
+import { globalRateLimiter } from "./server/middleware/rateLimiter.js";
+import { errorHandler } from "./server/middleware/errorHandler.js";
+
+import postRoutes from "./server/routes/postRoutes.js";
+import reasonRoutes from "./server/routes/reasonRoutes.js";
+import adminRoutes from "./server/routes/adminRoutes.js";
+import monitorRoutes from "./server/routes/monitorRoutes.js";
+import { getCommunityStats } from "./server/services/reasonService.js";
+import { getHealthStatus } from "./server/services/monitorService.js";
+
+dotenv.config();
 
 async function startServer() {
   const app = express();
- const PORT = process.env.PORT || 3000;
+  const PORT = process.env.PORT || 3000;
 
-  app.use(express.json());
+  // 1. Connect Database
+  await connectDB();
 
-  // Health check endpoint
-  app.get("/api/health", (_req, res) => {
-    res.json({ status: "ok", service: "ReasonsToLive API" });
+  // 2. Initialize Seed & Migrations
+  try {
+    await seedDatabase();
+  } catch (seedErr) {
+    console.warn("⚠️  Initial seeding check warning:", seedErr.message);
+  }
+
+  // 3. Security Hardening (Helmet, Mongo Sanitize)
+  configureSecurity(app);
+
+  // 4. Request Logging
+  app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
+
+  // 5. Body Parsers
+  app.use(express.json({ limit: "1mb" }));
+  app.use(express.urlencoded({ extended: true, limit: "1mb" }));
+
+  // 6. Global Rate Limiter for API endpoints
+  app.use("/api", globalRateLimiter);
+
+  // 7. Core Feature Routes
+  app.use("/api/posts", postRoutes);
+  app.use("/api/reasons", reasonRoutes);
+  app.use("/api/admin", adminRoutes);
+  app.use("/api/monitor", monitorRoutes);
+
+  // 8. Backward-Compatible Aliases for Frontend
+  app.get("/api/health", async (_req, res, next) => {
+    try {
+      const health = await getHealthStatus();
+      res.json(health);
+    } catch (err) {
+      next(err);
+    }
   });
 
-  // Community summary stats
-  app.get("/api/stats", (_req, res) => {
+  app.get("/api/stats", async (_req, res, next) => {
     try {
-      const stats = db.getStats();
+      const stats = await getCommunityStats();
       res.json(stats);
     } catch (err) {
-      res.status(500).json({ error: "Failed to fetch stats", details: err.message });
+      next(err);
     }
   });
 
-  // GET /api/posts - query with search, category, mood, page, limit, sort
-  app.get("/api/posts", (req, res) => {
-    try {
-      const { category, mood, search, sort, page, limit } = req.query;
-      const result = db.getPosts({
-        category: typeof category === "string" ? category : undefined,
-        mood: typeof mood === "string" ? mood : undefined,
-        search: typeof search === "string" ? search : undefined,
-        sort: sort === "helpful" ? "helpful" : "latest",
-        page: page ? parseInt(page, 10) : 1,
-        limit: limit ? parseInt(limit, 10) : 9,
-      });
-      res.json(result);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to retrieve posts", details: err.message });
-    }
-  });
+  // 9. Centralized Error Handler (must be registered after API routes)
+  app.use("/api", errorHandler);
 
-  // POST /api/posts - create anonymous post
-  app.post("/api/posts", (req, res) => {
-    try {
-      const { content, category, mood } = req.body;
-
-      if (!content || typeof content !== "string" || content.trim().length < 5) {
-        return res.status(400).json({ error: "Content must be at least 5 characters long." });
-      }
-
-      if (!category || typeof category !== "string") {
-        return res.status(400).json({ error: "Category is required." });
-      }
-
-      if (!mood || typeof mood !== "string") {
-        return res.status(400).json({ error: "Mood is required." });
-      }
-
-      const post = db.createPost({
-        content: content.trim(),
-        category: category.trim(),
-        mood: mood.trim(),
-      });
-
-      res.status(201).json(post);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to create post", details: err.message });
-    }
-  });
-
-  // GET /api/posts/random - get a random letter/post
-  app.get("/api/posts/random", (req, res) => {
-    try {
-      const post = db.getRandomPost();
-      if (!post) {
-        return res.status(404).json({ error: "No posts available" });
-      }
-      res.json(post);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch random post", details: err.message });
-    }
-  });
-
-  // GET /api/posts/:id - single post
-  app.get("/api/posts/:id", (req, res) => {
-    try {
-      const post = db.getPostById(req.params.id);
-      if (!post) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-      res.json(post);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch post", details: err.message });
-    }
-  });
-
-  // PATCH /api/posts/:id/react - react with helpful or heart
-  app.patch("/api/posts/:id/react", (req, res) => {
-    try {
-      const { type } = req.body;
-      if (type !== "helpful" && type !== "heart") {
-        return res.status(400).json({ error: "Invalid reaction type. Must be 'helpful' or 'heart'." });
-      }
-
-      const updated = db.reactToPost(req.params.id, type);
-      if (!updated) {
-        return res.status(404).json({ error: "Post not found" });
-      }
-
-      res.json(updated);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to record reaction", details: err.message });
-    }
-  });
-
-  // GET /api/reasons - get all reasons to live
-  app.get("/api/reasons", (req, res) => {
-    try {
-      const { search, category } = req.query;
-      const reasons = db.getReasons({
-        search: typeof search === "string" ? search : undefined,
-        category: typeof category === "string" ? category : undefined,
-      });
-      res.json(reasons);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch reasons", details: err.message });
-    }
-  });
-
-  // GET /api/reasons/random - get random uplifting reason
-  app.get("/api/reasons/random", (_req, res) => {
-    try {
-      const reason = db.getRandomReason();
-      if (!reason) {
-        return res.status(404).json({ error: "No reasons available" });
-      }
-      res.json(reason);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to fetch random reason", details: err.message });
-    }
-  });
-
-  // POST /api/reasons - submit a reason to live
-  app.post("/api/reasons", (req, res) => {
-    try {
-      const { text, category, author } = req.body;
-      if (!text || typeof text !== "string" || text.trim().length < 3) {
-        return res.status(400).json({ error: "Reason text must be at least 3 characters long." });
-      }
-
-      const reason = db.createReason({
-        text: text.trim(),
-        category: category?.trim(),
-        author: author?.trim() || "Anonymous",
-      });
-
-      res.status(201).json(reason);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to submit reason", details: err.message });
-    }
-  });
-
-  // PATCH /api/reasons/:id/like - resonate/like a reason
-  app.patch("/api/reasons/:id/like", (req, res) => {
-    try {
-      const updated = db.likeReason(req.params.id);
-      if (!updated) {
-        return res.status(404).json({ error: "Reason not found" });
-      }
-      res.json(updated);
-    } catch (err) {
-      res.status(500).json({ error: "Failed to like reason", details: err.message });
-    }
-  });
-
-  // Vite middleware for development / static serving for production
+  // 10. Frontend Client Serving (Vite Dev Middleware or Static Production)
   if (process.env.NODE_ENV !== "production") {
     const vite = await createViteServer({
       server: { middlewareMode: true },
@@ -191,8 +89,13 @@ async function startServer() {
     });
   }
 
+  // 11. Final Error Handler for Non-API errors
+  app.use(errorHandler);
+
   app.listen(PORT, "0.0.0.0", () => {
-    console.log(`ReasonsToLive server listening on http://localhost:${PORT}`);
+    console.log(`\n🚀 ReasonsToLive server listening on http://localhost:${PORT}`);
+    console.log(`🛡️  Security: Helmet, Rate Limiting & Mongo Sanitize active`);
+    console.log(`🤖 AI Moderation: Gemini 3.8 Flash active\n`);
   });
 }
 
